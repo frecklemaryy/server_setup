@@ -45,6 +45,8 @@ if [[ -n "${HOST_LOCATION:-}" ]]; then
   ' /etc/passwd | sudo tee /etc/passwd.new >/dev/null
   sudo mv /etc/passwd.new /etc/passwd
 
+fi
+
 # Настройка ssh
 cp -a "/etc/ssh/sshd_config" "/etc/ssh/sshd_config.bak.$(date +%Y%m%d)"
 cp "data/sshd_config" "/etc/ssh/"
@@ -124,15 +126,14 @@ echo "${SSH_AUTH_KEY}" >> "${new_user_ssh}/authorized_keys" && chmod 600 "${new_
 
 # Выбор редактора: VIM
 new_user_bashrc="/home/${NEW_USER}/.bashrc"
-echo 'export EDITOR=vim' >> $new_user_bashrc && echo 'export VISUAL=vim' >> $new_user_bashrc
-source $new_user_bashrc
+echo "export EDITOR=vim" >> $new_user_bashrc && echo "export VISUAL=vim" >> $new_user_bashrc
 
 # Настройка доступа к github.com
 echo "Настройка доступа к github.com."
 echo "Регистрация id_ed25519.pub"
 echo ""
 ssh-keygen -t ed25519 -C "${HOST_LOCATION}" -f "${new_user_ssh}/id_ed25519"
-chmod 700 $dim_ssh && chmod 600 "${new_user_ssh}/id_ed25519" && chmod 644 "#{new_user_ssh}/id_ed25519.pub"
+chmod 700 $new_user_ssh && chmod 600 "${new_user_ssh}/id_ed25519" && chmod 644 "#{new_user_ssh}/id_ed25519.pub"
 echo "cat /home/${NEW_USER}/.ssh/id_ed25519.pub:"
 cat "${new_user_ssh}/id_ed25519.pub"
 echo "Вставьте этот SSH-ключ в github.com/ВАШ_USERNAME -> Settings -> SSH & GPG keys -> New SSH Key -> вставить новый auth key"
@@ -153,6 +154,6 @@ sudo reboot
 
 "
 
-su $NEW_USER
+su -c ${NEW_USER}
 cd ~
 sudo ls

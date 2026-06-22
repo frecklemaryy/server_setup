@@ -29,7 +29,7 @@ apt install file vim ufw cron git gh socat nginx python3.12-venv vnstat iftop -y
 
 echo "Регистрация нового пользователя"
 useradd -m -c "${HOST_LOCATION}" ${NEW_USER}
-echo "Придумайте пароль для NEW_USER: "
+echo "Придумайте пароль для ${NEW_USER}: "
 passwd $NEW_USER
 usermod -aG sudo $NEW_USER
 echo "Пользователь ${NEW_USER} создан."
@@ -133,8 +133,8 @@ echo "Настройка доступа к github.com."
 echo "Регистрация id_ed25519.pub"
 echo ""
 ssh-keygen -t ed25519 -C "${HOST_LOCATION}" -f "${new_user_ssh}/id_ed25519"
-chmod 700 $new_user_ssh && chmod 600 "${new_user_ssh}/id_ed25519" && chmod 644 "#{new_user_ssh}/id_ed25519.pub"
-echo "cat /home/${NEW_USER}/.ssh/id_ed25519.pub:"
+chmod 700 $new_user_ssh && chmod 600 "${new_user_ssh}/id_ed25519" && chmod 644 "${new_user_ssh}/id_ed25519.pub"
+echo "cat ${new_user_ssh}/id_ed25519.pub:"
 cat "${new_user_ssh}/id_ed25519.pub"
 echo "Вставьте этот SSH-ключ в github.com/ВАШ_USERNAME -> Settings -> SSH & GPG keys -> New SSH Key -> вставить новый auth key"
 

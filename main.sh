@@ -23,6 +23,10 @@ else
 
 fi
 
+# Обновление пакетов
+apt update && apt upgrade -y && apt autoremove -y
+apt install file vim ufw cron git gh socat nginx python3.12-venv vnstat iftop -y
+
 echo "Регистрация нового пользователя"
 useradd -m -c "${HOST_LOCATION}" ${NEW_USER}
 echo "Придумайте пароль для NEW_USER: "
@@ -108,10 +112,6 @@ sysctl -p
 # MYJOBS-END
 CRON
 ) | crontab -
-
-# Обновление пакетов
-apt update && apt upgrade -y && apt autoremove -y
-apt install file vim ufw cron git gh socat nginx python3.12-venv vnstat iftop -y
 
 # Копирование monitoring/ -> /home/{NEW_USER}/
 cp -r monitoring/ /home/${NEW_USER}/

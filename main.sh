@@ -101,8 +101,6 @@ sysctl -p
   cat <<'CRON'
 # MYJOBS-BEGIN
 0 0,12 * * * reboot
-0 2,8,14,20 * * * systemctl restart xray
-59 23 * * * truncate -s 0 /var/log/xray/access.log && truncate -s 0 /var/log/xray/error.log
 59 23 * * * truncate -s 0 /var/log/syslog && rm /var/log/*.gz && rm /var/log/*.1
 59 23 * * * journalctl --vacuum-time=1d
 # MYJOBS-END

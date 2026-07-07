@@ -75,8 +75,8 @@ fi
 
 # Запустить ufw, если не запущен
 if systemctl is-active --quiet ufw; then
-  ufw restart
-  echo "Ufw перезапущен."
+  ufw reload
+  echo "Ufw уже был запущен"
 
 else
   ufw enable

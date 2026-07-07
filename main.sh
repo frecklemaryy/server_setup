@@ -137,6 +137,7 @@ chmod 700 $new_user_ssh && chmod 600 "${new_user_ssh}/id_ed25519" && chmod 644 "
 echo "cat ${new_user_ssh}/id_ed25519.pub:"
 cat "${new_user_ssh}/id_ed25519.pub"
 echo "Вставьте этот SSH-ключ в github.com/ВАШ_USERNAME -> Settings -> SSH & GPG keys -> New SSH Key -> вставить новый auth key"
+chown -R ${NEW_USER}:${NEW_USER} /home/${NEW_USER}/.ssh
 
 # Переключение пользователя на NEW_USER
 echo "Переключение пользователя: root -> USER:${NEW_USER}

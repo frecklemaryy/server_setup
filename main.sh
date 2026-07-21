@@ -42,7 +42,7 @@ if [[ -n "${HOST_LOCATION:-}" ]]; then
     next
   }
   $1 == $NEW_USER {
-    print "${NEW_USER}:x:1000:1000:" host_location ":/home/${NEW_USER}:/bin/bash"
+    print "${NEW_USER}:x:1000:1000:${HOST_LOCATION}:/home/${NEW_USER}:/bin/bash"
     next
   }
   { print }

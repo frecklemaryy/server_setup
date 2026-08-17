@@ -3,19 +3,20 @@ set -euo pipefail
 
 source ".env"
 
-if [[ -n "$NEW_USER" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$ALLOWED_HOSTS" ]]; then
+if [[ -n "$NEW_USER" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$SSH_PASSPHRASE" && -n "$ALLOWED_HOSTS" ]]; then
   echo ""
   echo "Загружены параметры из .env"
   echo ""
   echo "NEW_USER: $NEW_USER"
   echo "HOST_LOCATION: $HOST_LOCATION"
   echo "SSH_AUTH_KEY: $SSH_AUTH_KEY"
+  echo "SSH_PASSPHRASE: $SSH_PASSPHRASE"
   echo "ALLOWED_HOSTS: $ALLOWED_HOSTS"
   echo ""
 
 else
   echo ""
-  echo "Переменные среды не загружены: NEW_USER or HOST_LOCATION or SSH_AUTH_KEY or ALLOWED_HOSTS is NULL"
+  echo "Переменные среды не загружены: NEW_USER or HOST_LOCATION or SSH_AUTH_KEY or SSH_PASSPHRASE or ALLOWED_HOSTS is NULL"
   echo "Отредактируйте файл: .env"
   echo "Подробнее: см README.md или cat env_markup"
   echo ""
@@ -108,16 +109,17 @@ update-alternatives --config editor
 
 # Настройка SSH_AUTH_KEY пользователя NEW_USER
 new_user_ssh="/home/${NEW_USER}/.ssh"
-mkdir $new_user_ssh
+mkdir -p $new_user_ssh
 chown -R ${NEW_USER}:${NEW_USER} $new_user_ssh
 chmod 700 $new_user_ssh
-echo "${SSH_AUTH_KEY}" >> "${new_user_ssh}/authorized_keys" && chmod 600 "${new_user_ssh}/authorized_keys"
+echo "${SSH_AUTH_KEY}" > "${new_user_ssh}/authorized_keys" && chmod 600 "${new_user_ssh}/authorized_keys"
 
 # Настройка доступа к github.com
 echo "Настройка доступа к github.com."
 echo "Регистрация id_ed25519.pub"
 echo ""
-ssh-keygen -t ed25519 -C "${HOST_LOCATION}" -f "${new_user_ssh}/id_ed25519"
+rm -f "${new_user_ssh}/id_ed25519" "${new_user_ssh}/id_ed25519.pub"
+ssh-keygen -t ed25519 -N "${SSH_PASSPHRASE}" -C "${HOST_LOCATION}" -f "${new_user_ssh}/id_ed25519"
 chmod 700 $new_user_ssh && chmod 600 "${new_user_ssh}/id_ed25519" && chmod 644 "${new_user_ssh}/id_ed25519.pub"
 echo "cat ${new_user_ssh}/id_ed25519.pub:"
 cat "${new_user_ssh}/id_ed25519.pub"

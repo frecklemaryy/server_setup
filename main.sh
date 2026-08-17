@@ -60,13 +60,6 @@ getent passwd "${NEW_USER}"
 id "${NEW_USER}"
 getent passwd root
 
-# Настройка SSH_AUTH_KEY пользователя NEW_USER
-new_user_ssh="/home/${NEW_USER}/.ssh"
-mkdir $new_user_ssh
-chown -R ${NEW_USER}:${NEW_USER} $new_user_ssh
-chmod 700 $new_user_ssh
-echo "${SSH_AUTH_KEY}" >> "${new_user_ssh}/authorized_keys" && chmod 600 "${new_user_ssh}/authorized_keys"
-
 # Выбор редактора: VIM
 new_user_bashrc="/home/${NEW_USER}/.bashrc"
 echo "export EDITOR=vim" >> $new_user_bashrc && echo "export VISUAL=vim" >> $new_user_bashrc
@@ -112,6 +105,13 @@ sysctl -p
 
 # Выбор редактора по умолчанию: выставить vim
 update-alternatives --config editor
+
+# Настройка SSH_AUTH_KEY пользователя NEW_USER
+new_user_ssh="/home/${NEW_USER}/.ssh"
+mkdir $new_user_ssh
+chown -R ${NEW_USER}:${NEW_USER} $new_user_ssh
+chmod 700 $new_user_ssh
+echo "${SSH_AUTH_KEY}" >> "${new_user_ssh}/authorized_keys" && chmod 600 "${new_user_ssh}/authorized_keys"
 
 # Настройка доступа к github.com
 echo "Настройка доступа к github.com."

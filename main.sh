@@ -72,9 +72,6 @@ chown -R ${NEW_USER}:${NEW_USER} /home/${NEW_USER}/monitoring
 # Настройка ssh
 cp -a "/etc/ssh/sshd_config" "/etc/ssh/sshd_config.bak.$(date +%Y%m%d)"
 cp "data/sshd_config" "/etc/ssh/"
-echo ""
-echo "sshd -t"
-sshd -t
 systemctl restart ssh
 echo "auth required pam_listfile.so onerr=succeed item=user sense=deny file=/etc/ssh/deniedusers" >> /etc/pam.d/login
 echo "root" > "/etc/ssh/deniedusers" && chmod 600 "/etc/ssh/deniedusers"

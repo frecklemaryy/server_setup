@@ -92,7 +92,6 @@ fi
 # Включить ufw, если не включен
 ufw --force enable
 ufw reload
-ufw status
 
 # Настройка sysctl
 cp "/etc/sysctl.conf" "/etc/sysctl.conf.back.$(date +%Y%m%d%H%M%S)"
@@ -118,25 +117,28 @@ echo ""
 rm -f "${new_user_ssh}/id_ed25519" "${new_user_ssh}/id_ed25519.pub"
 ssh-keygen -t ed25519 -N "${SSH_PASSPHRASE}" -C "${HOST_LOCATION}" -f "${new_user_ssh}/id_ed25519"
 chmod 700 $new_user_ssh && chmod 600 "${new_user_ssh}/id_ed25519" && chmod 644 "${new_user_ssh}/id_ed25519.pub"
-echo "cat ${new_user_ssh}/id_ed25519.pub:"
-cat "${new_user_ssh}/id_ed25519.pub"
-echo "Вставьте этот SSH-ключ в github.com/ВАШ_USERNAME -> Settings -> SSH & GPG keys -> New SSH Key -> вставить новый auth key"
 chown -R ${NEW_USER}:${NEW_USER} /home/${NEW_USER}/.ssh
 
 echo ""
+echo "Вставьте этот SSH-ключ в https://github.com/settings/keys"
+echo "cat ${new_user_ssh}/id_ed25519.pub:"
+cat "${new_user_ssh}/id_ed25519.pub"
+echo ""
 echo "cat /etc/ssh/sshd_config"
 cat /etc/ssh/sshd_config
+echo ""
+echo "ufw status"
+ufw status
 echo ""
 
 # Переключение пользователя на NEW_USER
 echo "Протестируйте шелл пользователя USER:${NEW_USER} и запуск основных программ
 
-su -c ${NEW_USER}
+su ${NEW_USER}
 cd ~
 sudo ls
 
 ssh -T git@github.com
-update-alternatives --config editor
 
 Затем, перезагрузите систему:
 sudo reboot

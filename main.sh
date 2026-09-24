@@ -3,7 +3,7 @@ set -euo pipefail
 
 source ".env"
 
-if [[ -n "$NEW_USER" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$SSH_PASSPHRASE" && -n "$ALLOWED_HOSTS" ]]; then
+if [[ -n "$NEW_USER" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$SSH_PASSPHRASE" && -n "$ALLOWED_IP" ]]; then
   echo ""
   echo "Загружены параметры из .env"
   echo ""
@@ -11,12 +11,12 @@ if [[ -n "$NEW_USER" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$SSH_PA
   echo "HOST_LOCATION: $HOST_LOCATION"
   echo "SSH_AUTH_KEY: $SSH_AUTH_KEY"
   echo "SSH_PASSPHRASE: $SSH_PASSPHRASE"
-  echo "ALLOWED_HOSTS: $ALLOWED_HOSTS"
+  echo "ALLOWED_IP: $ALLOWED_IP"
   echo ""
 
 else
   echo ""
-  echo "Переменные среды не загружены: NEW_USER or HOST_LOCATION or SSH_AUTH_KEY or SSH_PASSPHRASE or ALLOWED_HOSTS is NULL"
+  echo "Переменные среды не загружены: NEW_USER or HOST_LOCATION or SSH_AUTH_KEY or SSH_PASSPHRASE or ALLOWED_IP is NULL"
   echo "Отредактируйте файл: .env"
   echo "Подробнее: см README.md или cat env_markup"
   echo ""
@@ -71,27 +71,16 @@ chown -R ${NEW_USER}:${NEW_USER} /home/${NEW_USER}/monitoring
 
 # Настройка ssh
 cp -a "/etc/ssh/sshd_config" "/etc/ssh/sshd_config.bak.$(date +%Y%m%d)"
-cp "data/sshd_config" "/etc/ssh/"
+cp "data/sshd_config" "/etc/ssh/sshd_config"
 systemctl restart ssh
 echo "auth required pam_listfile.so onerr=succeed item=user sense=deny file=/etc/ssh/deniedusers" >> /etc/pam.d/login
 echo "root" > "/etc/ssh/deniedusers" && chmod 600 "/etc/ssh/deniedusers"
 
-#Настройка ufw
-# Добавить в ufw доступ к SSH: allow ip:port:
-# 32755/tcp поочередно для каждого IP из ALLOWED_HOSTS, если ip's указаны, иначе доступ с любого ip на 32755/tcp, если ALLOWED_HOSTS=="*"
-if [[ "$ALLOWED_HOSTS" == "*" ]]; then
-  ufw allow 32755/tcp comment "SSH from any ip"
-
-else
-  for allowed_ip in $ALLOWED_HOSTS; do
-    ufw allow from $allowed_ip proto tcp to any port 32755 comment "SSH from ${allowed_ip}"
-  
-  done
-
-fi
-# Включить ufw, если не включен
+# Настройка ufw: для каждого IP из ALLOWED_IP разрешены все порты
+for allowed_ip in $ALLOWED_IP; do
+  ufw allow from "$allowed_ip" comment "from Server_Setup ALLOWED_IP"
+done
 ufw --force enable
-ufw reload
 
 # Настройка sysctl
 cp "/etc/sysctl.conf" "/etc/sysctl.conf.back.$(date +%Y%m%d%H%M%S)"

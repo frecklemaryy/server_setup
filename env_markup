@@ -14,6 +14,5 @@ SSH_AUTH_KEY=""
 # SSH_PASSPHRASE для ssh ключа github.com
 SSH_PASSPHRASE=""
 
-# Список доверенных ip's для доступа через SSH через пробел: "ipv4 ipv4 ipv4".
-# Если нужно оставить доступ с любого ip, оставьте значение: "*"
-ALLOWED_HOSTS="*"
+# Список IP через пробел. Для каждого адреса ufw разрешает все порты: "ipv4 ipv4 ipv4"
+ALLOWED_IP=""

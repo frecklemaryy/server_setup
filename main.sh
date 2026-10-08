@@ -83,7 +83,9 @@ done
 ufw --force enable
 
 # Настройка sysctl
-cp "/etc/sysctl.conf" "/etc/sysctl.conf.back.$(date +%Y%m%d%H%M%S)"
+if [[ -f /etc/sysctl.conf ]]; then
+  cp "/etc/sysctl.conf" "/etc/sysctl.conf.back.$(date +%Y%m%d%H%M%S)"
+fi
 cp "data/sysctl.conf" "/etc/sysctl.conf"
 echo "sudo sysctl -p:"
 echo ""

@@ -7,7 +7,7 @@ fi
 
 source ".env"
 
-if [[ -n "$NEW_USER" && -n "$NEW_USER_PASSWORD" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$SSH_PASSPHRASE" && -n "$ALLOWED_IP" && -n "$MASTERVPS_SYNC_KEY" ]]; then
+if [[ -n "${NEW_USER:-}" && -n "${NEW_USER_PASSWORD:-}" && -n "${HOST_LOCATION:-}" && -n "${SSH_AUTH_KEY:-}" && -n "${SSH_PASSPHRASE:-}" && -n "${ALLOWED_IP:-}" && -n "${MASTERVPS_SYNC_KEY:-}" ]]; then
   echo ""
   echo "Загружены параметры из .env"
   echo ""

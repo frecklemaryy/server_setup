@@ -5,11 +5,19 @@
 # Имя нового пользователя
 NEW_USER=""
 
+# Пароль нового пользователя. После создания пользователя main.sh удаляет .env
+NEW_USER_PASSWORD=""
+
 # Название хоста или доменное имя сервера
 HOST_LOCATION=""
 
 # SSH ключ для входа на сервер без пароля с текущего компьютера, cat ~/.ssh/id_ed25519.pub
 SSH_AUTH_KEY=""
+
+# Публичный ключ master vps, чтобы он забирал статус по SSH.
+# На master vps: cat ~/.ssh/id_ed25519_crontab_sync.pub
+# Приватный файл id_ed25519_crontab_sync сюда не копировать.
+MASTERVPS_SYNC_KEY=""
 
 # SSH_PASSPHRASE для ssh ключа github.com
 SSH_PASSPHRASE=""

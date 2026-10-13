@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ -f /tmp/.server_setup_env ]]; then
+  cp /tmp/.server_setup_env /root/server_setup/.env && rm /tmp/.server_setup_env
+fi
+
 source ".env"
 
-if [[ -n "$NEW_USER" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$SSH_PASSPHRASE" && -n "$ALLOWED_IP" ]]; then
+if [[ -n "$NEW_USER" && -n "$NEW_USER_PASSWORD" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$SSH_PASSPHRASE" && -n "$ALLOWED_IP" && -n "$MASTERVPS_SYNC_KEY" ]]; then
   echo ""
   echo "Загружены параметры из .env"
   echo ""
@@ -12,11 +16,12 @@ if [[ -n "$NEW_USER" && -n "$HOST_LOCATION" && -n "$SSH_AUTH_KEY" && -n "$SSH_PA
   echo "SSH_AUTH_KEY: $SSH_AUTH_KEY"
   echo "SSH_PASSPHRASE: $SSH_PASSPHRASE"
   echo "ALLOWED_IP: $ALLOWED_IP"
+  echo "MASTERVPS_SYNC_KEY: $MASTERVPS_SYNC_KEY"
   echo ""
 
 else
   echo ""
-  echo "Переменные среды не загружены: NEW_USER or HOST_LOCATION or SSH_AUTH_KEY or SSH_PASSPHRASE or ALLOWED_IP is NULL"
+  echo "Переменные среды не загружены: NEW_USER or NEW_USER_PASSWORD or HOST_LOCATION or SSH_AUTH_KEY or SSH_PASSPHRASE or ALLOWED_IP or MASTERVPS_SYNC_KEY is NULL"
   echo "Отредактируйте файл: .env"
   echo "Подробнее: см README.md или cat env_markup"
   echo ""
@@ -24,9 +29,17 @@ else
 
 fi
 
-# Обновление пакетов
-apt update && apt upgrade -y && apt autoremove -y
-apt install file vim ufw cron git socat nginx vnstat iftop -y
+# Обновление пакетов. На новом VPS ничего не спрашивать и оставлять уже стоящие конфиги.
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+export APT_LISTCHANGES_FRONTEND=none
+export UCF_FORCE_CONFFOLD=1
+apt update && apt upgrade -y \
+  -o Dpkg::Options::="--force-confdef" \
+  -o Dpkg::Options::="--force-confold" && apt autoremove -y
+apt install file vim ufw cron git socat nginx vnstat iftop -y \
+  -o Dpkg::Options::="--force-confdef" \
+  -o Dpkg::Options::="--force-confold"
 
 # Автозагрузка Crontab
 ( crontab -l 2>/dev/null | sed '/^# MYJOBS-BEGIN$/,/^# MYJOBS-END$/d' || true
@@ -51,8 +64,9 @@ journalctl --vacuum-time=1d
 echo "Регистрация нового пользователя"
 cp -a /etc/passwd "/etc/passwd.bak.$(date +%Y%m%d)"
 useradd -m -s /bin/bash -c "${HOST_LOCATION}" -G sudo "${NEW_USER}"
-echo "Придумайте пароль для ${NEW_USER}: "
-passwd "${NEW_USER}"
+printf '%s:%s\n' "${NEW_USER}" "${NEW_USER_PASSWORD}" | chpasswd
+unset NEW_USER_PASSWORD
+rm -f .env
 usermod -s /usr/sbin/nologin root
 echo "Пользователь ${NEW_USER} создан."
 echo ""
@@ -68,6 +82,20 @@ echo "export EDITOR=vim" >> $new_user_bashrc && echo "export VISUAL=vim" >> $new
 # Копирование monitoring/ -> /home/{NEW_USER}/
 cp -r monitoring/ /home/${NEW_USER}/
 chown -R ${NEW_USER}:${NEW_USER} /home/${NEW_USER}/monitoring
+
+# vnstat для съёма статуса с master vps: /home/USER/monitoring/vnstat.txt
+systemctl enable --now vnstat
+vnstat_file="/home/${NEW_USER}/monitoring/vnstat.txt"
+/usr/bin/vnstat > "$vnstat_file" || true
+chown "${NEW_USER}:${NEW_USER}" "$vnstat_file"
+(
+  crontab -l 2>/dev/null | sed '/^# VNSTAT-BEGIN$/,/^# VNSTAT-END$/d' || true
+  cat <<CRON
+# VNSTAT-BEGIN
+55 * * * * /usr/bin/vnstat > /home/${NEW_USER}/monitoring/vnstat.txt && chown ${NEW_USER}:${NEW_USER} /home/${NEW_USER}/monitoring/vnstat.txt
+# VNSTAT-END
+CRON
+) | crontab -
 
 # Настройка ssh
 cp -a "/etc/ssh/sshd_config" "/etc/ssh/sshd_config.bak.$(date +%Y%m%d)"
@@ -99,7 +127,9 @@ new_user_ssh="/home/${NEW_USER}/.ssh"
 mkdir -p $new_user_ssh
 chown -R ${NEW_USER}:${NEW_USER} $new_user_ssh
 chmod 700 $new_user_ssh
-echo "${SSH_AUTH_KEY}" > "${new_user_ssh}/authorized_keys" && chmod 600 "${new_user_ssh}/authorized_keys"
+echo "${SSH_AUTH_KEY}" > "${new_user_ssh}/authorized_keys"
+echo "${MASTERVPS_SYNC_KEY}" >> "${new_user_ssh}/authorized_keys"
+chmod 600 "${new_user_ssh}/authorized_keys"
 
 # Настройка доступа к github.com
 echo "Настройка доступа к github.com."
@@ -134,3 +164,6 @@ ssh -T git@github.com
 Затем, перезагрузите систему:
 sudo reboot
 "
+
+project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+rm -f /tmp/.server_setup_env "${project_dir}/.server_setup_env"

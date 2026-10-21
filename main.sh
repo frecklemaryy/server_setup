@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ -f /tmp/.server_setup_env ]]; then
-  cp /tmp/.server_setup_env /root/server_setup/.env && rm /tmp/.server_setup_env
+env_params_ready() {
+  [[ -n "${NEW_USER:-}" && -n "${NEW_USER_PASSWORD:-}" && -n "${HOST_LOCATION:-}" && -n "${SSH_AUTH_KEY:-}" && -n "${SSH_PASSPHRASE:-}" && -n "${ALLOWED_IP:-}" && -n "${MASTERVPS_SYNC_KEY:-}" ]]
+}
+
+if [[ -f .env && -r .env ]]; then
+  source .env
 fi
 
-source ".env"
+if ! env_params_ready; then
+  if [[ -f /tmp/.server_setup_env ]]; then
+    cp /tmp/.server_setup_env /root/server_setup/.env && rm /tmp/.server_setup_env
+    source .env
+  fi
+fi
 
-if [[ -n "${NEW_USER:-}" && -n "${NEW_USER_PASSWORD:-}" && -n "${HOST_LOCATION:-}" && -n "${SSH_AUTH_KEY:-}" && -n "${SSH_PASSPHRASE:-}" && -n "${ALLOWED_IP:-}" && -n "${MASTERVPS_SYNC_KEY:-}" ]]; then
+if env_params_ready; then
   echo ""
   echo "Загружены параметры из .env"
   echo ""
